@@ -1,0 +1,9 @@
+name = Deposit permissions
+description = "Deposit content type group permissions"
+package = Deposit permissions
+dependencies[] = content_type_groups
+
+; Purposively added for feature development.
+version = 7.x-1.x
+core = 7.x
+

@@ -1,0 +1,116 @@
+<?php
+/**
+ * @file
+ * Content type group permissions for deposits 
+ *
+ * Complements 'repo_researcher' feature
+ */
+
+/**
+ * Implements hook_permission().
+ */
+function deposit_permissions_permission() {
+  return array(
+    'create deposit_ct content' => array(
+      'title' => t('Create deposit content'),
+      'description' => t("Create content from the deposit 'content type group'"),
+    ),
+    'edit own deposit_ct content' => array(
+      'title' => t('Edit own deposit content'),
+      'description' => t("Edit own content from the deposit 'content type group'"),
+    ),
+    'edit any deposit_ct content' => array(
+      'title' => t('Edit any deposit content'),
+      'description' => t("Edit any content from the deposit 'content type group'"),
+    ),
+    'delete own deposit_ct content' => array(
+      'title' => t('Delete own deposit content'),
+      'description' => t("Delete own content from the deposit 'content type group'"),
+    ),
+    'delete any deposit_ct content' => array(
+      'title' => t('Delete any deposit content'),
+      'description' => t("Delete any content from the deposit 'content type group'"),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter
+ */
+function deposit_permissions_form_user_admin_permissions_alter(&$form, &$form_state, $form_id) {
+		// alter'user_admin_permissions' form
+				// form has been submitted - correct permissions
+				dpm($form);		
+				// $form['#submit'] = array_merge(array('deposit_permissions_permissions_submit'), $form['#submit']);
+				$ctg_perms_all = _get_type_permissions();
+				foreach($form['checkboxes'] as $rid => $checkboxes) {
+						// for each role
+						$permissions = $checkboxes['#default_value'];
+
+								if (is_array($permissions) && count($permissions) ) {
+										// get ticked ctg permissions for this role 
+										$role_ctgperms = _get_type_permissions($form['checkboxes'][$rid]['#default_value']);
+										// clear existing permissions from deposit types
+										$form['checkboxes'][$rid]['#default_value'] = array_diff($permissions, $ctg_perms_all);
+										// apply deposit content type group permissions
+										if (is_array($role_ctgperms)) {
+												$form['checkboxes'][$rid]['#default_value'] = array_merge($role_ctgperms, $form['checkboxes'][$rid]['#default_value']);
+										}
+								}
+						
+				}				
+				//dpm($form_state);
+}
+
+/**
+ * Return array of the matching content type perms for all content_type_group perms
+ */
+function _get_type_permissions($default_values = NULL, $ctgroup = 'deposit') {
+  $ctgroup_perm = $ctgroup.'_ct'; // replacement string within associated  permissions
+  $deposit_perms = deposit_permissions_permission();
+
+	$permissions = array();	
+	if ($default_values) {
+		// only return ticked permissions
+		$deposit_perms = array_intersect_key(array_flip($default_values), $deposit_perms);
+	}
+	if (is_array($deposit_perms)) {
+		foreach(array_keys($deposit_perms) as $perm) {
+				// generate equivalent permission string for child types
+				$types = new ContentTypeGroup($ctgroup);
+				$types = array_keys($types->typeList());
+				foreach($types as $type) {
+					$ctperm = str_replace($ctgroup_perm, $type, $perm);			  
+					// $permissions[$ctperm] = NULL;
+					$permissions[] = $ctperm;
+				}
+		}
+		return $permissions;
+	}
+}
+
+
+
+
+
+
+
+//  UNUSED
+function deposit_permissions_permissions_submit($form, &$form_state){
+		dpm($form);
+		$ctg_perms_all = _get_type_permissions();
+		dpm($ctg_perms_all);
+		
+		foreach($form_state['input'] as $rid => $permissions) {
+				// for each role
+				watchdog('deposit_permissions', "deposit_permissions role:$rid");
+				if (is_array($permissions)) {			
+						// clear existing permissions from deposit types
+						//$form_state['input'][$rid] = array_diff_key($permissions, $ctg_perms_all);
+						$form_state['input'][$rid]['delete own deposit_ct content'] = NULL;
+						dpm($permissions);
+						dpm($form_state['input'][$rid]);
+				}
+		}
+		watchdog('deposit_permissions', 'deposit_permissions_permissions_submit');		
+}

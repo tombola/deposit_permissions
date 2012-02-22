@@ -1,0 +1,5 @@
+Creates CRUD drupal permissions for content type groups
+(administered via content_type_groups module)
+
+This is done so that features (eg repo_researcher) can specify permissions
+dynamically across a range  of 'deposit' content types rather than individually 
