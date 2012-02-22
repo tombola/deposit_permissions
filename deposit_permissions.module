@@ -39,10 +39,17 @@ function deposit_permissions_permission() {
  * Implements hook_form_alter to mirror ctg permissions 
  */
 function deposit_permissions_form_user_admin_permissions_alter(&$form, &$form_state, $form_id) {
-	// alter'user_admin_permissions' form
-		// form has been submitted - correct permissions
-		dpm($form);   
-		// $form['#submit'] = array_merge(array('deposit_permissions_permissions_submit'), $form['#submit']);
+		
+		dpm($form);
+		dpm($form_state);
+		
+		// TODO: get one of these callbacks working then hide the checkboxes for child types
+		//$form['#submit'] = array_merge(array('deposit_permissions_permissions_submit'), $form['#submit']);
+		//$form['#validate'][] = 'deposit_permissions_permissions_validate';
+		
+		//dpm($form);
+		//dpm($form_state);
+		
 		$ctg_perms_all = _get_type_permissions();
 		foreach($form['checkboxes'] as $rid => $checkboxes) {
 			// for each role
@@ -57,7 +64,7 @@ function deposit_permissions_form_user_admin_permissions_alter(&$form, &$form_st
 							$form['checkboxes'][$rid]['#default_value'] = array_merge($role_ctgperms, $form['checkboxes'][$rid]['#default_value']);
 					}
 			}       
-		}			
+		}
 }
 
 /**
@@ -87,28 +94,38 @@ function _get_type_permissions($default_values = NULL, $ctgroup = 'deposit') {
 	}
 }
 
-
-
-
-
+function deposit_permissions_permissions_validate($form, &$form_state) {
+	dpm('deposit_permissions_permissions_validate');
+	
+	dpm($form_state);
+	// test by adding a permission
+	$form_state['input'][5]['access administration menu '] = 'access administration menu ';
+	dpm($form_state);
+	watchdog('deposit_permissions', 'deposit_permissions_permissions_validate');
+}
 
 
 //  UNUSED
 function deposit_permissions_permissions_submit($form, &$form_state){
-		dpm($form);
-		$ctg_perms_all = _get_type_permissions();
-		dpm($ctg_perms_all);
+		dpm('form submitted');
+		dpm($form_state);
 		
-		foreach($form_state['input'] as $rid => $permissions) {
-				// for each role
-				watchdog('deposit_permissions', "deposit_permissions role:$rid");
-				if (is_array($permissions)) {			
-						// clear existing permissions from deposit types
-						//$form_state['input'][$rid] = array_diff_key($permissions, $ctg_perms_all);
-						$form_state['input'][$rid]['delete own deposit_ctg content'] = NULL;
-						dpm($permissions);
-						dpm($form_state['input'][$rid]);
-				}
-		}
+		dpm($form_state);
+		// $ctg_perms_all = _get_type_permissions();
+		//dpm($ctg_perms_all);
+		
+		
+		
+		//foreach($form_state['input'] as $rid => $permissions) {
+		//		// for each role
+		//		watchdog('deposit_permissions', "deposit_permissions role:$rid");
+		//		if (is_array($permissions)) {			
+		//				// clear existing permissions from deposit types
+		//				//$form_state['input'][$rid] = array_diff_key($permissions, $ctg_perms_all);
+		//				$form_state['input'][$rid]['delete own deposit_ctg content'] = NULL;
+		//				//dpm($permissions);
+		//				//dpm($form_state['input'][$rid]);
+		//		}
+		//}
 		watchdog('deposit_permissions', 'deposit_permissions_permissions_submit');		
 }
